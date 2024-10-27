@@ -9,5 +9,6 @@ module.exports = withMT({
   theme: {
     extend: {},
   },
-  plugins: [],
+  safelist: ["prose", "editor-content"],
+  plugins: [require("@tailwindcss/typography")],
 });

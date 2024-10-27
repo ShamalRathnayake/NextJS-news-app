@@ -9,7 +9,7 @@ const CommonRoute = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user && user.role === "admin") {
+    if (!loading && user && ["superAdmin", "admin"].includes(user.role)) {
       router.push("/dashboard");
     }
   }, [user, loading]);

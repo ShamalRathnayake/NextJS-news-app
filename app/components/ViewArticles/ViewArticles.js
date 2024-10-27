@@ -20,12 +20,16 @@ import ArticleForm from "../ArticleForm/ArticleForm";
 import { useAuthContext } from "../Context/AuthProvider";
 import Link from "next/link";
 import { useArticles } from "../Context/NewsContext";
+import ArticleDetails from "../ArticleDetails/ArticleDetails";
 
 export const ViewArticles = ({ isLandingPage }) => {
   const { user, loading } = useAuthContext();
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [isConfirmationOpen, setConfirmationOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingArticle, setViewingArticle] = useState(null);
+
   const {
     articles,
     loading: articlesLoading,
@@ -44,8 +48,9 @@ export const ViewArticles = ({ isLandingPage }) => {
     setModalOpen(false);
   };
 
-  const handleArticleSubmit = (newArticle) => {
+  const handleArticleSubmit = async (newArticle) => {
     console.log("New Article Created: ", newArticle);
+    await addArticle(newArticle);
     handleCloseModal();
   };
 
@@ -67,6 +72,16 @@ export const ViewArticles = ({ isLandingPage }) => {
   const handleCloseConfirmation = () => {
     setSelectedArticle(null);
     setConfirmationOpen(false);
+  };
+
+  const handleOpenView = (article) => {
+    setViewingArticle(article);
+    setIsViewModalOpen(true);
+  };
+
+  const handleCloseView = () => {
+    setViewingArticle(null);
+    setIsViewModalOpen(false);
   };
 
   return (
@@ -99,53 +114,24 @@ export const ViewArticles = ({ isLandingPage }) => {
         <div className="container my-auto grid grid-cols-1 gap-x-8 gap-y-16 items-start lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
           {articles &&
             !articlesLoading &&
-            articles.map(
-              ({
-                _id,
-                title,
-                imageUrl,
-                category,
-                newsBody,
-                createdAt,
-                author,
-              }) => (
-                <ArticleCard
-                  key={_id}
-                  img={imageUrl}
-                  tag={category}
-                  title={title}
-                  desc={newsBody}
-                  date={createdAt}
-                  author={{
-                    img: author.profileImageUrl,
-                    name: author.username,
-                  }}
-                  onEdit={() =>
-                    handleArticleEdit({
-                      _id,
-                      title,
-                      imageUrl,
-                      category,
-                      newsBody,
-                      createdAt,
-                      author,
-                    })
-                  }
-                  onDelete={() =>
-                    handleArticleDelete({
-                      _id,
-                      title,
-                      imageUrl,
-                      category,
-                      newsBody,
-                      createdAt,
-                      author,
-                    })
-                  }
-                  hideButtons={isLandingPage}
-                />
-              )
-            )}
+            articles.map((article) => (
+              <ArticleCard
+                key={article._id}
+                img={article.imageUrl}
+                tag={article.category}
+                title={article.title}
+                desc={article.newsBody}
+                date={article.createdAt}
+                author={{
+                  img: article.author.profileImageUrl,
+                  name: article.author.username,
+                }}
+                onEdit={() => handleArticleEdit(article)}
+                onDelete={() => handleArticleDelete(article)}
+                onTextClick={() => handleOpenView(article)}
+                hideButtons={isLandingPage}
+              />
+            ))}
         </div>
         <Button
           variant="text"
@@ -157,7 +143,7 @@ export const ViewArticles = ({ isLandingPage }) => {
           <ArrowSmallDownIcon className="h-5 w-5 font-bold text-gray-900" />
           VIEW MORE
         </Button>
-        {/* Floating Action Button */}
+
         {!loading && user && !isLandingPage && (
           <div
             onClick={handleOpenModal}
@@ -168,7 +154,6 @@ export const ViewArticles = ({ isLandingPage }) => {
         )}
       </section>
 
-      {/* Modal for Article Form */}
       <Modal
         open={isModalOpen}
         onClose={handleCloseModal}
@@ -177,15 +162,19 @@ export const ViewArticles = ({ isLandingPage }) => {
         <ArticleForm onSubmit={handleArticleSubmit} article={selectedArticle} />
       </Modal>
 
-      {/* Confirmation Modal */}
       <Modal
         open={isConfirmationOpen}
         onClose={handleCloseConfirmation}
         title="Confirm Deletion"
       >
         <Typography>
-          Are you sure you want to delete the article titled{" "}
-          <strong>{selectedArticle?.title}</strong>?
+          Are you sure you want to{" "}
+          <span className="text-black font-bold">delete</span> the article
+          titled{" "}
+          <strong className="font-bold text-black">
+            {selectedArticle?.title}
+          </strong>
+          ?
         </Typography>
         <div className="flex justify-end mt-4">
           <Button
@@ -204,6 +193,15 @@ export const ViewArticles = ({ isLandingPage }) => {
             Delete
           </Button>
         </div>
+      </Modal>
+
+      <Modal
+        open={isViewModalOpen}
+        onClose={handleCloseView}
+        title={"View News"}
+        isWide={true}
+      >
+        <ArticleDetails news={viewingArticle} onClose={handleCloseView} />
       </Modal>
     </>
   );

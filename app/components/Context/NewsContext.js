@@ -13,12 +13,13 @@ export const ArticlesProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const fetchArticles = async (pageNum = 1) => {
+  const fetchArticles = async (pageNum) => {
+    console.log("🚀 ~ fetchArticles ~ pageNum:", pageNum);
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BE_URL}news?page=${pageNum}&limit=${
-          9 * page
+        `${process.env.NEXT_PUBLIC_BE_URL}news?page=1&limit=${
+          9 * (pageNum || page)
         }`
       );
 
@@ -37,12 +38,12 @@ export const ArticlesProvider = ({ children }) => {
 
   const loadNextPage = async () => {
     setPage(page + 1);
-    await fetchArticles();
+    await fetchArticles(page + 1);
   };
 
   const addArticle = async (newArticle) => {
     try {
-      const response = await fetch("/api/articles", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BE_URL}news/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,8 +57,10 @@ export const ArticlesProvider = ({ children }) => {
       if (!response.ok)
         throw new Error(data.message || "Failed to add article");
       await fetchArticles(page);
+      toast.success("Create Successful");
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || "Create Failed");
     }
   };
 
@@ -77,8 +80,10 @@ export const ArticlesProvider = ({ children }) => {
       if (!response.ok)
         throw new Error(data.message || "Failed to update article");
       await fetchArticles(page);
+      toast.success("Update Successful");
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || "Update Failed");
     }
   };
 

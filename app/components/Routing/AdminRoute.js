@@ -9,12 +9,13 @@ const AdminRoute = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "admin")) {
+    if (!loading && (!user || !["superAdmin", "admin"].includes(user.role))) {
       router.push("/");
     }
   }, [user, loading]);
 
-  if (loading || !user || user.role !== "admin") return null;
+  if (loading || !user || !["superAdmin", "admin"].includes(user.role))
+    return null;
 
   return <>{children}</>;
 };
